@@ -16,6 +16,11 @@ class Test_Process():
                 shutil.rmtree(dst)
             except FileNotFoundError:
                 pass
+            try:
+                os.remove(str(dst) + '.dashm')
+            except FileNotFoundError:
+                pass
+
 
     teardown_method = setup_method
 
@@ -25,6 +30,7 @@ class Test_Process():
 
         dst = self.data_path / 'processed-repos/dashm-testing'
         assert os.path.exists(dst)
+        assert os.path.exists(str(dst) + '.dashm')
 
         expected_files = Path(__file__).parents[0] / 'data/dashm-testing/*'
         actual_files = [os.path.split(x)[-1] for x in glob(str(dst / '*'))]
@@ -35,3 +41,7 @@ class Test_Process():
             with open(dst / os.path.split(f)[-1]) as fp:
                 actual_contents = fp.read()
             assert expected_contents == actual_contents
+
+
+class Test_CLI():
+    pass

@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 
-import os
 import subprocess as sp
 from pathlib import Path
+import argparse
+
+from . import get_data
+from .humanify_git import humanify
 
 
 def process(repo_path):
@@ -17,6 +20,9 @@ def process(repo_path):
 
         <commit-hash>.msg
         <commit-hash>.diff
+
+    A file called `<repo name>.dashm` will also be created
+    in the destination.
 
     Inputs
     ------
@@ -42,3 +48,29 @@ def process(repo_path):
             sp.check_call(message_command + [commit], stdout=f, cwd=repo_path)
         with open(dst_path / (commit + '.diff'), 'w') as f:
             sp.check_call(diff_command + [commit], stdout=f, cwd=repo_path)
+
+    # create the .dashm file if it does not already exist
+    with open(str(dst_path) + '.dashm', 'a'):
+        pass
+
+
+def cli():
+    p = argparse.ArgumentParser(
+        description='Process git repo into a more usable format'
+    )
+    p.add_argument('repo', type=str,
+                   help=('Absolute path to repo, or folder name of a folder'
+                         ' that exists in "<project path>/data/raw-repos/".'
+                         ' Alternatively, can be a git repo where we will'
+                         ' use the human-ish portion of the git repo.'))
+
+    args = p.parse_args()
+
+    repo = args.repo
+    if ':' in repo:
+        repo = get_data.humanify(repo)
+    process(args.repo)
+
+
+if __name__ == '__main__':
+    cli()

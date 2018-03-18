@@ -15,6 +15,10 @@ class Test_Clone():
                 shutil.rmtree(dst)
             except FileNotFoundError:
                 pass
+            try:
+                os.remove(str(dst) + '.dashm')
+            except FileNotFoundError:
+                pass
 
     teardown_method = setup_method
 
@@ -22,3 +26,8 @@ class Test_Clone():
         get_data.clone('git@github.com:kbrose/dashm-testing.git')
         dst = Path(__file__).parents[2] / 'data/raw-repos/dashm-testing'
         assert os.path.exists(dst)
+        assert os.path.exists(str(dst) + '.dashm')
+
+
+class Test_CLI():
+    pass
