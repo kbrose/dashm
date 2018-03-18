@@ -25,7 +25,7 @@ class Test_Process():
     teardown_method = setup_method
 
     def test_clone(self):
-        get_data.clone('git@github.com:kbrose/dashm-testing.git')
+        get_data.clone('https://github.com/kbrose/dashm-testing.git')
         process_data.process('dashm-testing')
 
         dst = self.data_path / 'processed-repos/dashm-testing'

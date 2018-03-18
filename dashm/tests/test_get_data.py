@@ -23,7 +23,7 @@ class Test_Clone():
     teardown_method = setup_method
 
     def test_clone(self):
-        get_data.clone('git@github.com:kbrose/dashm-testing.git')
+        get_data.clone('https://github.com/kbrose/dashm-testing.git')
         dst = Path(__file__).parents[2] / 'data/raw-repos/dashm-testing'
         assert os.path.exists(dst)
         assert os.path.exists(str(dst) + '.dashm')
