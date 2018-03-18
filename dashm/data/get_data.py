@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 
+"""
+Utils to download data from external sources.
+"""
+
 import subprocess as sp
 from pathlib import Path
 import argparse

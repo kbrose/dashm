@@ -1,5 +1,10 @@
 # -*- coding: utf-8 -*-
 
+"""
+Utils to process git repos into something more usable and save
+the result back to disk.
+"""
+
 import subprocess as sp
 from pathlib import Path
 import argparse
