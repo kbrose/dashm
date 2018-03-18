@@ -4,7 +4,6 @@ import subprocess as sp
 from pathlib import Path
 import argparse
 
-from . import get_data
 from .humanify_git import humanify
 
 
@@ -68,7 +67,7 @@ def cli():
 
     repo = args.repo
     if ':' in repo:
-        repo = get_data.humanify(repo)
+        repo = humanify(repo)
     process(args.repo)
 
 

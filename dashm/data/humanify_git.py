@@ -1,5 +1,6 @@
 import argparse
 
+
 def humanify(url):
     """
     Take the human-ish part out of a Git URL.
