@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import subprocess as sp
-import pathlib
+from pathlib import Path
 
 
 def clone(repo, dst='data/raw-repos'):
@@ -18,5 +18,5 @@ def clone(repo, dst='data/raw-repos'):
         The destination path relative to the top level of this project.
     """
     repo_name = repo.split('.git')[0].split('/')[-1]
-    target = pathlib.Path(__file__).parents[2] / dst / repo_name
+    target = Path(__file__).parents[2] / dst / repo_name
     sp.check_call(['git', 'clone', repo, target])
