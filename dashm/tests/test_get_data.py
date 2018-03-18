@@ -1,21 +1,24 @@
 import os
-import pathlib
+from pathlib import Path
 import shutil
 
 from dashm.data import get_data
 
 
-class TestClone():
+class Test_Clone():
     @classmethod
     def setup_method(cls):
-        cls.tmp_dst = pathlib.Path(__file__).parents[0] / 'tmp-data/'
-        os.makedirs(cls.tmp_dst, exist_ok=True)
+        cls.data_path = Path(__file__).parents[2] / 'data/'
+        for interim in ['raw-repos', 'processed-repos']:
+            dst = cls.data_path / interim / 'dashm-testing'
+            try:
+                shutil.rmtree(dst)
+            except FileNotFoundError:
+                pass
 
-    @classmethod
-    def teardown_method(cls):
-        shutil.rmtree(cls.tmp_dst)
+    teardown_method = setup_method
 
     def test_clone(self):
-        get_data.clone('git@github.com:kbrose/math.git', self.tmp_dst)
-        assert os.path.exists(self.tmp_dst)
-        assert os.path.exists(pathlib.Path(self.tmp_dst) / 'math/.git')
+        get_data.clone('git@github.com:kbrose/dashm-testing.git')
+        dst = Path(__file__).parents[2] / 'data/raw-repos/dashm-testing'
+        assert os.path.exists(dst)
