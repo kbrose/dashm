@@ -41,12 +41,13 @@ def process(repo_path):
     commits = commits.decode('ascii').split()
 
     message_command = ['git', 'log', '--pretty=%B', '-n', '1']
-    diff_command = ['git', 'diff']
-    for commit in commits:
-        with open(dst_path / (commit + '.msg'), 'w') as f:
-            sp.check_call(message_command + [commit], stdout=f, cwd=repo_path)
-        with open(dst_path / (commit + '.diff'), 'w') as f:
-            sp.check_call(diff_command + [commit], stdout=f, cwd=repo_path)
+    diff_command = ['git', 'diff', '-n', '1']
+    for commit0, commit1 in zip(commits[:-1], commits[1:]):
+        with open(dst_path / (commit1 + '.msg'), 'w') as f:
+            sp.check_call(message_command + [commit1], stdout=f, cwd=repo_path)
+        with open(dst_path / (commit1 + '.diff'), 'w') as f:
+            sp.check_call(diff_command + [commit1, commit0],
+                          stdout=f, cwd=repo_path)
 
     # create the .dashm file if it does not already exist
     with open(str(dst_path) + '.dashm', 'a'):

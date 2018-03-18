@@ -1,11 +1,9 @@
 diff --git a/README.md b/README.md
-index faa620b..075a5c7 100644
+index faa620b..7d7ceb2 100644
 --- a/README.md
 +++ b/README.md
-@@ -1,2 +1,6 @@
+@@ -1,2 +1,4 @@
  # dashm-testing
  Repo that `dashm` can develop against.
 +
 +This needs some commits that we can use.
-+
-+So we'll make some edits to the README.
