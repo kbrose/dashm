@@ -34,7 +34,7 @@ class Test_Process():
         assert os.path.exists(dst)
         assert os.path.exists(str(dst) + '.dashm')
 
-        expected_files = Path(__file__).parents[0] / 'data/dashm-testing/*'
+        expected_files = Path(__file__).parent / 'data/dashm-testing/*'
         actual_files = [os.path.split(x)[-1] for x in glob(str(dst / '*'))]
         for f in glob(str(expected_files)):
             assert os.path.split(f)[-1] in actual_files
