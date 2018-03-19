@@ -10,10 +10,12 @@ from dashm.data import humanify_git
 class Test_Humanify():
     @classmethod
     def setup_method(cls):
-        old_sys_argv = sys.argv
-        sys.argv = old_sys_argv
+        cls.__old_sys_argv = sys.argv
 
-    teardown_method = setup_method
+    @classmethod
+    def teardown_method(cls):
+        sys.argv = cls.__old_sys_argv
+
 
     def test_humanify_ssh(self):
         url = 'git@github.com:kbrose/dashm-testing.git'
