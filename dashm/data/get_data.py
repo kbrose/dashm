@@ -10,6 +10,7 @@ import argparse
 from .humanify_git import humanify
 
 
+# TODO: add capabilities to checkout specific branches
 def clone(repo, dst=None):
     """
     Clones the git repo at the given destination to
