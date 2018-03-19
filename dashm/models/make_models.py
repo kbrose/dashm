@@ -14,7 +14,7 @@ def make_models(summary=True):
     ------
     summary : True or int > 0
         Whether a summary of the models should be printed to stdout.
-        If True, use the default line length, otherwise if summary
+        If True, use the line length of 80, otherwise if summary
         is an int > 0, it is used as the line length.
 
     Returns
@@ -57,11 +57,14 @@ def make_models(summary=True):
 
     if summary:
         line_length = 80 if summary is True else summary
-        print('{0} TRAINER MODEL {0}'.format('#'*15))
+        l = len(' TRAINER MODEL ')
+        pad = (line_length - l) // 2
+        pad = max(pad, 0)
+        print('{0} TRAINER MODEL {0}'.format('#' * pad))
         training_model.summary(line_length=line_length)
-        print('{0} ENCODER MODEL {0}'.format('#'*15))
+        print('{0} ENCODER MODEL {0}'.format('#' * pad))
         encoder_model.summary(line_length=line_length)
-        print('{0} DECODER MODEL {0}'.format('#'*15))
+        print('{0} DECODER MODEL {0}'.format('#' * pad))
         decoder_model.summary(line_length=line_length)
 
     return training_model, encoder_model, decoder_model

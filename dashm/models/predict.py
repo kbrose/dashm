@@ -28,7 +28,8 @@ class Predictor():
         TODO
         """
         if model_dir is None:
-            model_dir = max(glob(str(Path(__file__).parent / 'saved' / '*')))
+            model_dir = '*'
+        model_dir = max(glob(str(Path(__file__).parent / 'saved' / model_dir)))
 
         _, encoder, decoder = load_models(model_dir)
         self.encoder = encoder

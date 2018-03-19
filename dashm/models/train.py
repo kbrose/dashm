@@ -13,7 +13,7 @@ from .make_models import make_models
 SAVING_TIME_STRING = '%Y-%m-%d_%H-%M-%S'
 
 
-def train(repo_path):
+def train(repo_path, summary=False, **kwargs):
     """
     Trains the models against the diff/message data in
     `<project path>/data/processed-repos/<repo_path>`.
@@ -23,9 +23,13 @@ def train(repo_path):
     repo_path : str or Path-like
         Folder in `<project path>/data/processed-repos/` to
         train against.
+    summary : bool or int > 0
+        Print model summary? passed to make_models()
+    **kwargs
+        Passed through to model.fit_generator()
     """
     # Get the model architectures
-    trainer, encoder, decoder = make_models(summary=120)
+    trainer, encoder, decoder = make_models(summary=summary)
 
     # Compile the model we'll be training
     trainer.compile('adam',
@@ -47,7 +51,9 @@ def train(repo_path):
             yield [ix, iy[:, :-1, :]], iy[:, 1:, :]
 
     # Fit the model
-    trainer.fit_generator(datagen(), steps_per_epoch=10, epochs=10)
+    defaults = {'steps_per_epoch': 1000, 'epochs': 100}
+    defaults.update(kwargs)
+    trainer.fit_generator(datagen(), **defaults)
 
     # Save the models
     now = datetime.utcnow().strftime(SAVING_TIME_STRING) + '_' + str(repo_path)
