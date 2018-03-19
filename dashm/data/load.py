@@ -9,6 +9,65 @@ import numpy as np
 Utils to load processed data into python data structures.
 """
 
+DIFF_END = b'\x01'
+MSG_BEGIN = b'\x00'
+MSG_END = b'\x01'
+
+
+def one_hot_encode_diff(bytes_to_encode):
+    """
+    One-hot encode the given bytes into 2D float32 numpy array.
+
+    Any bytes with values < 2 are sent to 2, and any values > 127
+    are sent to 127. The value1 is used as a special marker:
+
+        1 : end of commit diff
+
+    See also: DIFF_END and MSG_END.
+
+    Inputs
+    ------
+    bytes_to_encode : bytes
+        The bytes to be one-hot encode.
+
+    Returns
+    -------
+    y : 2D float32 numpy array of one-hot encoded values
+    """
+    x = np.fromstring(bytes_to_encode + DIFF_END, np.uint8)
+    x = np.clip(x, 2, 127)
+    y = np.zeros((x.size, 128), dtype=np.float32)
+    y[np.arange(y.shape[0]), x] = 1.0
+    return y
+
+
+def one_hot_encode_msg(bytes_to_encode):
+    """
+    One-hot encode the given bytes into 2D float32 numpy array.
+
+    Any bytes with values < 2 are sent to 2, and any values > 127
+    are sent to 127. The values 0 and 1 are used as special markers:
+
+        0 : beginning of commit message
+        1 : end of commit message
+
+    See also: DIFF_END and MSG_END.
+
+    Inputs
+    ------
+    bytes_to_encode : bytes
+        The bytes to be one-hot encode.
+
+    Returns
+    -------
+    y : 2D float32 numpy array of one-hot encoded values
+    """
+    x = np.fromstring(MSG_BEGIN + bytes_to_encode + MSG_END, np.uint8)
+    x = np.clip(x, 2, 127)
+    y = np.zeros((x.size, 128), dtype=np.float32)
+    y[np.arange(y.shape[0]), x] = 1.0
+    return y
+
 
 def load(repo_path):
     """
@@ -21,7 +80,11 @@ def load(repo_path):
 
     The one-hot-encoding is done one character at a time,
     treating the text as ASCII text, and any bytes with
-    values > 127 are sent to 127. Thus, `J == 128`.
+    values < 2 are sent to 2, and any values > 127 are sent
+    to 127. The values 0 and 1 are used as special markers:
+
+        0 : end of commit diff
+        1 : end of commit message
 
     Inputs
     ------
@@ -39,13 +102,7 @@ def load(repo_path):
         with open(f, 'rb') as fp:
             return fp.read()
 
-    def one_hot_encode_str(s):
-        a = np.clip(np.fromstring(s, np.uint8), 0, 127)
-        b = np.zeros((a.size, 127), dtype=np.float32)
-        b[np.arange(b.shape[0]), a] = 1.0
-        return b
-
-    x = [one_hot_encode_str(read_file(c + '.diff')) for c in commits]
-    y = [one_hot_encode_str(read_file(c + '.msg')) for c in commits]
+    x = [one_hot_encode_diff(read_file(c + '.diff')) for c in commits]
+    y = [one_hot_encode_msg(read_file(c + '.msg')) for c in commits]
 
     return x, y
