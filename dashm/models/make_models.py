@@ -1,6 +1,14 @@
 # -*- coding: utf-8 -*-
 
-import keras
+import os
+import io
+import contextlib
+
+f = io.StringIO()
+with contextlib.redirect_stderr(f):
+    import keras
+
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 
 def make_models(summary=True):
