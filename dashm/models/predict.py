@@ -2,6 +2,7 @@
 
 from glob import glob
 from pathlib import Path
+import sys
 
 import numpy as np
 
@@ -29,7 +30,10 @@ class Predictor():
         """
         if model_dir is None:
             model_dir = '*'
-        model_dir = max(glob(str(Path(__file__).parent / 'saved' / model_dir)))
+        model_dirs = glob(str(Path(__file__).parent / 'saved' / model_dir))
+        if not model_dirs:
+            raise RuntimeError('No saved models found.')
+        model_dir = max(model_dirs)
 
         _, encoder, decoder = load_models(model_dir)
         self.encoder = encoder
@@ -65,24 +69,11 @@ class Predictor():
         return b''.join([chr(np.argmax(y)).encode('ascii') for y in probs])
 
 
-if __name__ == '__main__':
+def cli():
     predictor = Predictor()
-    s = b'''diff --git a/Makefile b/Makefile
-index 9917f99..8a30d76 100644
---- a/Makefile
-+++ b/Makefile
-@@ -13,6 +13,12 @@ process: raw data/processed-repos/$(human_repo_name).dashm
- data/processed-repos/$(human_repo_name).dashm:
-        python -m dashm.data.process_data $(human_repo_name)
+    s = sys.stdin.read()
+    print(predictor.predict(s).decode('ascii'))
 
-+model: data/processed-repos/$(human_repo_name).dashm
-+ python -m dashm.models.train $(human_repo_name)
-+
-+test: clean-code
-+ python -m pytest
-+
- clean-all: clean-code clean-data
 
- clean-data: clean-raw clean-processe
-'''
-    print(predictor.predict(s))
+if __name__ == '__main__':
+    cli()
