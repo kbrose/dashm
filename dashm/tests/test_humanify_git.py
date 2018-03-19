@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from dashm.data import humanify_git
 
 

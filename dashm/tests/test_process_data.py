@@ -23,7 +23,6 @@ class Test_Process():
             except FileNotFoundError:
                 pass
 
-
     teardown_method = setup_method
 
     def test_clone(self):
