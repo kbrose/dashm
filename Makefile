@@ -1,7 +1,7 @@
 .PHONY: raw process clean-data clean-raw clean-processed clean-code test
 
 human_repo_name=$(shell if [ $(repo) ]; then python -m dashm.data.humanify_git \
-		$(repo); else echo _not_given_; fi)
+		$(repo); else echo IF_YOU_SEE_THIS_SPECIFY_repo_AS_ARG; fi)
 
 raw: data/raw-repos/$(human_repo_name).dashm
 
