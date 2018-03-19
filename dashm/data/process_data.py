@@ -74,7 +74,7 @@ def cli():
     repo = args.repo
     if ':' in repo:
         repo = humanify(repo)
-    process(args.repo)
+    process(repo)
 
 
 if __name__ == '__main__':
