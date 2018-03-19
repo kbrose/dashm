@@ -66,4 +66,4 @@ def train(repo_path, summary=False, **kwargs):
 
 
 if __name__ == '__main__':
-    train('math')
+    train('math', summary=120, steps_per_epoch=100, epochs=10)
