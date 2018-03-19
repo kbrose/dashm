@@ -8,7 +8,12 @@ python:
 
 sudo: false
 
-install: []
+install:
+  - pip install numpy
+  - pip install tensorflow
+  - pip install keras
+  - pip install pytest
+  - pip install pytest-cov
 
 before_script:
 
