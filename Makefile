@@ -13,6 +13,12 @@ process: raw data/processed-repos/$(human_repo_name).dashm
 data/processed-repos/$(human_repo_name).dashm:
 	python -m dashm.data.process_data $(human_repo_name)
 
+model: data/processed-repos/$(human_repo_name).dashm
+	python -m dashm.models.train $(human_repo_name)
+
+test: clean-code
+	python -m pytest
+
 clean-all: clean-code clean-data
 
 clean-data: clean-raw clean-processed
@@ -27,6 +33,3 @@ clean-code:
 	rm -rf *.pyc
 	rm -rf .pytest_cache
 	rm -rf dashm/.pytest_cache
-
-test: clean-code
-	python -m pytest
