@@ -5,6 +5,8 @@ from glob import glob
 from pathlib import Path
 import shutil
 
+import pytest
+
 from dashm.data import get_data
 from dashm.data import process_data
 from dashm.models import train
@@ -48,6 +50,6 @@ class Test_Train():
             assert 'encoder.h5' in all_filenames
             assert 'decoder.h5' in all_filenames
 
-
-class Test_CLI():
-    pass
+    @pytest.mark.xfail
+    def test_cli(self):
+        raise NotImplementedError()

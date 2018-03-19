@@ -70,7 +70,3 @@ class Test_Process():
 
         process_data.cli()
         self.assert_processed_correctly()
-
-
-class Test_CLI():
-    pass

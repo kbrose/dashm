@@ -46,7 +46,3 @@ class Test_Clone():
         sys.argv = ['python', 'https://github.com/kbrose/dashm-testing.git']
         get_data.cli()
         self.assert_cloned_correctly()
-
-
-class Test_CLI():
-    pass
