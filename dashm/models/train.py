@@ -4,13 +4,14 @@ import random
 import os
 from pathlib import Path
 from datetime import datetime
+import argparse
 
 import numpy as np
 
 from ..data.load import load
 from .make_models import make_models
 
-SAVING_TIME_STRING = '%Y-%m-%d_%H-%M-%S'
+SAVE_TIME_STRING = '%Y-%m-%d_%H-%M-%S'
 
 
 def train(repo_path, summary=False, **kwargs):
@@ -56,7 +57,7 @@ def train(repo_path, summary=False, **kwargs):
     trainer.fit_generator(datagen(), **defaults)
 
     # Save the models
-    now = datetime.utcnow().strftime(SAVING_TIME_STRING) + '_' + str(repo_path)
+    now = datetime.utcnow().strftime(SAVE_TIME_STRING) + '_' + str(repo_path)
     save_path = Path(__file__).parent / 'saved' / now
     os.makedirs(save_path, exist_ok=False)
 
@@ -66,4 +67,24 @@ def train(repo_path, summary=False, **kwargs):
 
 
 if __name__ == '__main__':
-    train('math', summary=120, steps_per_epoch=100, epochs=10)
+    p = argparse.ArgumentParser(
+        description='Train a diff -> commit msg translator'
+    )
+    p.add_argument('repo', type=str,
+                   help=('Absolute path to repo, or folder name of a folder'
+                         ' that exists in'
+                         ' "<project path>/data/processed-repos/".'))
+    p.add_argument('--summary', type=int, default=0,
+                   help=('Width in characters of model summary. Use 0 for'
+                         ' no summary.'))
+    p.add_argument('--steps_per_epoch', type=int, default=100,
+                   help=('Number of training steps per epoch.'))
+    p.add_argument('--epochs', type=int, default=10,
+                   help=('Number of training steps per epoch.'))
+
+    args = p.parse_args()
+
+    train(args.repo,
+          summary=args.summary,
+          steps_per_epoch=args.steps_per_epoch,
+          epochs=args.epochs)
