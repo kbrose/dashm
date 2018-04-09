@@ -19,7 +19,7 @@ def one_hot_encode_diff(bytes_to_encode):
     One-hot encode the given bytes into 2D float32 numpy array.
 
     Any bytes with values < 2 are sent to 2, and any values > 127
-    are sent to 127. The value1 is used as a special marker:
+    are sent to 127. The value 1 is used as a special marker:
 
         1 : end of commit diff
 
@@ -36,6 +36,7 @@ def one_hot_encode_diff(bytes_to_encode):
     """
     x = np.fromstring(bytes_to_encode + DIFF_END, np.uint8)
     x = np.clip(x, 2, 127)
+    x[-1] = np.fromstring(DIFF_END, np.uint8)[0]
     y = np.zeros((x.size, 128), dtype=np.float32)
     y[np.arange(y.shape[0]), x] = 1.0
     return y
@@ -64,6 +65,8 @@ def one_hot_encode_msg(bytes_to_encode):
     """
     x = np.fromstring(MSG_BEGIN + bytes_to_encode + MSG_END, np.uint8)
     x = np.clip(x, 2, 127)
+    x[0] = np.fromstring(MSG_BEGIN, np.uint8)[0]
+    x[-1] = np.fromstring(MSG_END, np.uint8)[0]
     y = np.zeros((x.size, 128), dtype=np.float32)
     y[np.arange(y.shape[0]), x] = 1.0
     return y
