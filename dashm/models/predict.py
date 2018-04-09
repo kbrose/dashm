@@ -22,11 +22,20 @@ def load_models(model_dir):
 
 class Predictor():
     """
-    TODO
+    Make predictions using a model saved to disk.
     """
     def __init__(self, model_dir=None):
         """
-        TODO
+        Inputs
+        ------
+        model_dir : str or Path-like
+            Path to the folder containing the saved model.
+            Should contain files "trainer.h5", "encoder.h5", and
+            "decoder.h5".
+
+        See also
+        --------
+            `load_models`
         """
         if model_dir is None:
             model_dir = '*'
@@ -39,9 +48,16 @@ class Predictor():
         self.encoder = encoder
         self.decoder = decoder
 
-    def predict_proba(self, diff, max_len=300):
+        self._init_probs = np.expand_dims(one_hot_encode_msg(b'')[0:1], 0)
+
+    def state_from_diff(self, diff):
         """
-        TODO
+        Get the state encoded from the given diff.
+
+        Inputs
+        ------
+        diff : str or bytes-like
+            The git-diff to encode into a state passed to the decoder.
         """
         try:
             diff = diff.encode('ascii')
@@ -49,24 +65,64 @@ class Predictor():
             pass
 
         x = np.expand_dims(one_hot_encode_diff(diff), 0)
+        return self.encoder.predict(x)
 
-        state = self.encoder.predict(x)
-        out_probs = [np.expand_dims(one_hot_encode_msg(b'')[0:1], 0)]
-        for _ in range(max_len):
-            # y = np.expand_dims(one_hot_encode_msg(out[-1])[1:2], 0)
-            preds, state = self.decoder.predict([out_probs[-1], state])
-            out_probs.append(preds)
-            if chr(np.argmax(preds[0])).encode('ascii') == MSG_END:
-                break
+    def _proba_generator(self, state):
+        """
+        Generator to output probabilities.
+        """
+        probs = self._init_probs
+        while True:
+            probs, state = self.decoder.predict([probs, state])
+            yield probs
+
+    def predict_proba(self, diff, n=300):
+        """
+        Predicts a sequence of `n` of the commit message for a given
+        diff. Outputs a probability distribution over the possible
+        characters at each step.
+
+        Inputs
+        ------
+        diff : str or bytes-like
+            The git-diff that we will try to summarize into a message.
+        n : int
+            Number of steps to predict.
+
+        Returns
+        -------
+        out_probs : numpy.ndarray
+            (n, num_characters)-shaped array
+        """
+        state = self.state_from_diff(diff)
+        gen = self._proba_generator(state)
+        out_probs = np.array([next(gen) for i in range(n)])
 
         return out_probs
 
     def predict(self, diff, max_len=300):
         """
-        TODO
+        Predict the commit message for the given diff. Cut the
+        message off if it grows too long.
+
+        Inputs
+        ------
+        diff : str or bytes-like
+            The git-diff that we will try to summarize into a message.
+        max_len : int
+            Cut the message off if we get this many characters
+            without seeing the `dashm.data.load.MSG_END` character.
         """
-        probs = self.predict_proba(diff, max_len)
-        return b''.join([chr(np.argmax(y)).encode('ascii') for y in probs])
+        state = self.state_from_diff(diff)
+        gen = self._proba_generator(state)
+        out = []
+        while max_len > 0:
+            probs = next(gen)
+            out.append(chr(probs.argmax()).encode('ascii'))
+            if out[-1] == MSG_END:
+                break
+            max_len -= 1
+        return b''.join(out[1:-1]) # 1:-1 to cut out MSG_BEGIN/MSG_END
 
 
 def cli():

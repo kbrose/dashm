@@ -61,17 +61,21 @@ class Test_Predict():
 
         predictor_inferred = predict.Predictor()
 
-        probs = predictor_inferred.predict_proba(TEST_STRING)
-        preds = predictor_inferred.predict(TEST_STRING)
+        probs = predictor_inferred.predict_proba(TEST_STRING, 400)
+        preds = predictor_inferred.predict(TEST_STRING, 200)
 
-        assert len(probs) == len(preds)
+        assert len(probs) == 400
+        assert len(preds) <= 200
 
         predictor_explicit = predict.Predictor('*dashm-testing')
 
-        probs = predictor_explicit.predict_proba(TEST_STRING)
-        preds = predictor_explicit.predict(TEST_STRING)
+        probs = predictor_explicit.predict_proba(TEST_STRING, 400)
+        preds = predictor_explicit.predict(TEST_STRING, 200)
 
-        assert len(probs) == len(preds)
+        assert len(probs) == 400
+        assert len(preds) <= 200
+
+        predictor_explicit.predict(TEST_STRING.decode('utf-8'), 200)
 
     def test_predict_raises_when_not_found(self):
         with pytest.raises(RuntimeError):
