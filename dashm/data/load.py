@@ -2,6 +2,7 @@
 
 from glob import glob
 from pathlib import Path
+import random
 
 import numpy as np
 
@@ -72,7 +73,12 @@ def one_hot_encode_msg(bytes_to_encode):
     return y
 
 
-def load(repo_path):
+def _read_file(filename, maxlen=-1):
+    with open(filename, 'rb') as fp:
+        return fp.read(maxlen)
+
+
+def load(repo_path, max_diff_len=-1, max_msg_len=-1):
     """
     Loads the processed data from
     `<project path>/data/processed-repos/<repo name>` into
@@ -93,6 +99,12 @@ def load(repo_path):
     ------
     repo : str or Path-like
         A folder within `<project path>/data/processed-repos`
+    max_diff_len : int
+        Maximum number of bytes to read from the diff file.
+        If negative, the whole file is read.
+    max_msg_len : int
+        Maximum number of bytes to read from the message file.
+        If negative, the whole file is read.
 
     Returns
     -------
@@ -101,11 +113,52 @@ def load(repo_path):
     repo_path = Path(__file__).parents[2] / 'data/processed-repos' / repo_path
     commits = set([f.split('.')[0] for f in glob(str(repo_path / '*'))])
 
-    def read_file(f):
-        with open(f, 'rb') as fp:
-            return fp.read()
-
-    x = [one_hot_encode_diff(read_file(c + '.diff')) for c in commits]
-    y = [one_hot_encode_msg(read_file(c + '.msg')) for c in commits]
+    x = [one_hot_encode_diff(_read_file(c + '.diff', max_diff_len))
+         for c in commits]
+    y = [one_hot_encode_msg(_read_file(c + '.msg', max_msg_len))
+         for c in commits]
 
     return x, y
+
+
+def load_generator(repo_path, max_diff_len=-1, max_msg_len=-1):
+    """
+    A generator giving access to the data located in
+    `<project path>/data/processed-repos/<repo name>`.
+    Will continue to return samples x,y with
+
+        x : JxL array encoding the commit diff
+        y : KxL array encoding the commit message
+
+    The one-hot-encoding is done one character at a time,
+    treating the text as ASCII text, and any bytes with
+    values < 2 are sent to 2, and any values > 127 are sent
+    to 127. The values 0 and 1 are used as special markers:
+
+        0 : end of commit diff
+        1 : end of commit message
+
+    Inputs
+    ------
+    repo : str or Path-like
+        A folder within `<project path>/data/processed-repos`
+    max_diff_len : int
+        Maximum number of bytes to read from the diff file.
+        If negative, the whole file is read.
+    max_msg_len : int
+        Maximum number of bytes to read from the message file.
+        If negative, the whole file is read.
+
+    Returns
+    -------
+    generator repeatedly yielding
+        x,y : Two 2D numpy arrays.
+    """
+    repo_path = Path(__file__).parents[2] / 'data/processed-repos' / repo_path
+    commits = list(set([f.split('.')[0] for f in glob(str(repo_path / '*'))]))
+
+    while True:
+        c = random.choice(commits)
+        x = one_hot_encode_diff(_read_file(c + '.diff', max_diff_len))
+        y = one_hot_encode_msg(_read_file(c + '.msg', max_msg_len))
+        yield x, y

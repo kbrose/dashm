@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 
-import random
 import os
 from pathlib import Path
 from datetime import datetime
 import argparse
 
-import numpy as np
+from keras.preprocessing.sequence import pad_sequences
+from keras.callbacks import TensorBoard
 
-from ..data.load import load
+from ..data.load import load_generator
 from .make_models import make_models
 
 SAVE_TIME_STRING = '%Y-%m-%d_%H-%M-%S'
@@ -38,29 +38,44 @@ def train(repo_path, summary=False, **kwargs):
                     metrics=['accuracy'])
 
     # Get the data ready
-    x, y = load(repo_path)
-
-    def datagen(max_diff_len=200):
-        index_choices = range(len(x))
+    def datagen(batch_size, max_diff_len=200, max_msg_len=200):
+        raw_datagen = load_generator(repo_path, max_diff_len, max_msg_len)
         while True:
-            i = random.choice(index_choices)
-            ix = np.expand_dims(x[i], 0)
-            iy = np.expand_dims(y[i], 0)
-            if ix.shape[1] > max_diff_len:
-                j = np.random.randint(ix.shape[1] - max_diff_len)
-                ix = ix[:, j:j+max_diff_len, :]
-            yield [ix, iy[:, :-1, :]], iy[:, 1:, :]
+            data = [next(raw_datagen) for _ in range(batch_size)]
 
-    # Fit the model
-    defaults = {'steps_per_epoch': 1000, 'epochs': 100}
-    defaults.update(kwargs)
-    trainer.fit_generator(datagen(), **defaults)
+            xs = [d[0] for d in data]
+            xs = pad_sequences(xs,
+                               maxlen=max_diff_len,
+                               dtype='float32',
+                               padding='pre',
+                               truncating='post',
+                               value=0.0)
 
-    # Save the models
-    now = datetime.utcnow().strftime(SAVE_TIME_STRING) + '_' + str(repo_path)
+            ys = [d[1] for d in data]
+            ys = pad_sequences(ys,
+                               maxlen=max_msg_len,
+                               dtype='float32',
+                               padding='pre',
+                               truncating='post',
+                               value=0.0)
+
+            yield [xs, ys[:, :-1, :]], ys[:, 1:, :]
+
+    # Prep the output folder
+    now = datetime.now().strftime(SAVE_TIME_STRING) + '_' + str(repo_path)
     save_path = Path(__file__).parent / 'saved' / now
     os.makedirs(save_path, exist_ok=False)
 
+    # Fit the model
+    defaults = {'steps_per_epoch': 1000,
+                'epochs': 100,
+                'max_queue_size': 50,
+                'workers': 1,
+                'callbacks': [TensorBoard(log_dir=str(save_path / 'logs'))]}
+    defaults.update(kwargs)
+    trainer.fit_generator(datagen(32), **defaults)
+
+    # Save the models
     trainer.save_weights(save_path / 'trainer.h5')
     encoder.save_weights(save_path / 'encoder.h5')
     decoder.save_weights(save_path / 'decoder.h5')
