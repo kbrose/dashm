@@ -33,7 +33,7 @@ def train(repo_path, summary=False, **kwargs):
     trainer, encoder, decoder = make_models(summary=summary)
 
     # Compile the model we'll be training
-    trainer.compile('adam',
+    trainer.compile('adadelta',
                     loss='categorical_crossentropy',
                     metrics=['accuracy'])
 
@@ -73,7 +73,7 @@ def train(repo_path, summary=False, **kwargs):
                 'workers': 1,
                 'callbacks': [TensorBoard(log_dir=str(save_path / 'logs'))]}
     defaults.update(kwargs)
-    trainer.fit_generator(datagen(32), **defaults)
+    trainer.fit_generator(datagen(64), **defaults)
 
     # Save the models
     trainer.save_weights(save_path / 'trainer.h5')
@@ -92,9 +92,9 @@ if __name__ == '__main__':
     p.add_argument('--summary', type=int, default=0,
                    help=('Width in characters of model summary. Use 0 for'
                          ' no summary.'))
-    p.add_argument('--steps_per_epoch', type=int, default=100,
+    p.add_argument('--steps_per_epoch', type=int, default=1000,
                    help=('Number of training steps per epoch.'))
-    p.add_argument('--epochs', type=int, default=10,
+    p.add_argument('--epochs', type=int, default=100,
                    help=('Number of training steps per epoch.'))
 
     args = p.parse_args()
