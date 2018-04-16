@@ -57,7 +57,7 @@ class Test_Process():
     def test_cli_folder_name(self):
         get_data.clone('https://github.com/kbrose/dashm-testing.git')
 
-        sys.argv = ['python', 'dashm-testing']
+        sys.argv = ['unused', 'dashm-testing']
 
         process_data.cli()
         self.assert_processed_correctly()
@@ -65,7 +65,7 @@ class Test_Process():
     def test_cli_url_name(self):
         get_data.clone('https://github.com/kbrose/dashm-testing.git')
 
-        sys.argv = ['python', 'https://github.com/kbrose/dashm-testing.git']
+        sys.argv = ['unused', 'https://github.com/kbrose/dashm-testing.git']
 
         process_data.cli()
         self.assert_processed_correctly()

@@ -72,7 +72,7 @@ def train(repo_path, cv_train_split, summary=False, **kwargs):
     decoder.save_weights(save_path / 'decoder.h5')
 
 
-if __name__ == '__main__':
+def cli():
     p = argparse.ArgumentParser(
         description='Train a diff -> commit msg translator'
     )
@@ -80,7 +80,7 @@ if __name__ == '__main__':
                    help=('Absolute path to repo, or folder name of a folder'
                          ' that exists in'
                          ' "<project path>/data/processed-repos/".'))
-    p.add_argument('train/val split', type=float,
+    p.add_argument('cross_validation_split', type=float,
                    help=('Number between 0 and 1 indicating amount of'
                          ' data used for training vs. validation.'))
     p.add_argument('--summary', type=int, default=0,
@@ -94,6 +94,11 @@ if __name__ == '__main__':
     args = p.parse_args()
 
     train(args.repo,
+          args.cross_validation_split,
           summary=args.summary,
           steps_per_epoch=args.steps_per_epoch,
           epochs=args.epochs)
+
+
+if __name__ == '__main__':
+    cli()
