@@ -3,7 +3,6 @@
 import os
 from pathlib import Path
 import shutil
-from glob import glob
 import sys
 
 from dashm.data import get_data
@@ -39,10 +38,10 @@ class Test_Process():
         assert os.path.exists(dst)
         assert os.path.exists(str(dst) + '.dashm')
 
-        expected_files = Path(__file__).parent / 'data/dashm-testing/*'
-        actual_files = [os.path.split(x)[-1] for x in glob(str(dst / '*'))]
-        for f in glob(str(expected_files)):
-            assert os.path.split(f)[-1] in actual_files
+        expected_files = Path(__file__).parent / 'data/dashm-testing/'
+        actual_files = [f.name for f in dst.glob('*')]
+        for f in expected_files.glob('*'):
+            assert f.name in actual_files
             with open(f) as fp:
                 expected_contents = fp.read()
             with open(dst / os.path.split(f)[-1]) as fp:

@@ -5,16 +5,15 @@ from pathlib import Path
 from datetime import datetime
 import argparse
 
-from keras.preprocessing.sequence import pad_sequences
 from keras.callbacks import TensorBoard
 
-from ..data.load import load_generator
+from ..data.load import load_train_generator, load, format_batch
 from .make_models import make_models
 
 SAVE_TIME_STRING = '%Y-%m-%d_%H-%M-%S'
 
 
-def train(repo_path, summary=False, **kwargs):
+def train(repo_path, cv_train_split, summary=False, **kwargs):
     """
     Trains the models against the diff/message data in
     `<project path>/data/processed-repos/<repo_path>`.
@@ -24,6 +23,8 @@ def train(repo_path, summary=False, **kwargs):
     repo_path : str or Path-like
         Folder in `<project path>/data/processed-repos/` to
         train against.
+    cv_train_split : float
+        Number between 0 and 1 inclusive. See `data.load.load`.
     summary : bool or int > 0
         Print model summary? passed to make_models()
     **kwargs
@@ -39,27 +40,17 @@ def train(repo_path, summary=False, **kwargs):
 
     # Get the data ready
     def datagen(batch_size, max_diff_len=200, max_msg_len=200):
-        raw_datagen = load_generator(repo_path, max_diff_len, max_msg_len)
+        raw_datagen = load_train_generator(repo_path, cv_train_split,
+                                           max_diff_len, max_msg_len)
         while True:
-            data = [next(raw_datagen) for _ in range(batch_size)]
+            batch = [next(raw_datagen) for _ in range(batch_size)]
+            yield format_batch(batch, max_diff_len, max_msg_len)
 
-            xs = [d[0] for d in data]
-            xs = pad_sequences(xs,
-                               maxlen=max_diff_len,
-                               dtype='float32',
-                               padding='pre',
-                               truncating='post',
-                               value=0.0)
-
-            ys = [d[1] for d in data]
-            ys = pad_sequences(ys,
-                               maxlen=max_msg_len,
-                               dtype='float32',
-                               padding='pre',
-                               truncating='post',
-                               value=0.0)
-
-            yield [xs, ys[:, :-1, :]], ys[:, 1:, :]
+    val_diff_len = 400
+    val_msg_len = 200
+    val = load(repo_path, cv_train_split, 'val', max_diff_len=val_diff_len,
+               max_msg_len=val_msg_len)
+    val = format_batch(list(zip(*val)), val_diff_len, val_msg_len)
 
     # Prep the output folder
     now = datetime.now().strftime(SAVE_TIME_STRING) + '_' + str(repo_path)
@@ -73,7 +64,7 @@ def train(repo_path, summary=False, **kwargs):
                 'workers': 1,
                 'callbacks': [TensorBoard(log_dir=str(save_path / 'logs'))]}
     defaults.update(kwargs)
-    trainer.fit_generator(datagen(64), **defaults)
+    trainer.fit_generator(datagen(64), validation_data=val, **defaults)
 
     # Save the models
     trainer.save_weights(save_path / 'trainer.h5')
@@ -89,6 +80,9 @@ if __name__ == '__main__':
                    help=('Absolute path to repo, or folder name of a folder'
                          ' that exists in'
                          ' "<project path>/data/processed-repos/".'))
+    p.add_argument('train/val split', type=float,
+                   help=('Number between 0 and 1 indicating amount of'
+                         ' data used for training vs. validation.'))
     p.add_argument('--summary', type=int, default=0,
                    help=('Width in characters of model summary. Use 0 for'
                          ' no summary.'))

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from glob import glob
 from pathlib import Path
 import sys
+import unicodedata
 
 import numpy as np
 
@@ -29,9 +29,10 @@ class Predictor():
         Inputs
         ------
         model_dir : str or Path-like
-            Path to the folder containing the saved model.
-            Should contain files "trainer.h5", "encoder.h5", and
-            "decoder.h5".
+            Path to the folder containing the saved model, relative
+            to `<project path>/models/saved/`. Should contain files
+            "trainer.h5", "encoder.h5", and "decoder.h5".
+            DEFAULT: None, takes the most recent model.
 
         See also
         --------
@@ -39,7 +40,8 @@ class Predictor():
         """
         if model_dir is None:
             model_dir = '*'
-        model_dirs = glob(str(Path(__file__).parent / 'saved' / model_dir))
+        model_dir = str(model_dir)
+        model_dirs = list((Path(__file__).parent / 'saved').glob(model_dir))
         if not model_dirs:
             raise RuntimeError('No saved models found.')
         model_dir = max(model_dirs)
@@ -60,8 +62,10 @@ class Predictor():
             The git-diff to encode into a state passed to the decoder.
         """
         try:
-            diff = diff.encode('ascii')
-        except AttributeError:
+            diff = unicodedata.normalize('NFKD', diff)
+            diff = diff.encode('ascii', 'ignore')
+        except TypeError:
+            # diff already given in bytes
             pass
 
         x = np.expand_dims(one_hot_encode_diff(diff), 0)

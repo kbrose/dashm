@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import os
-from glob import glob
 from pathlib import Path
 import shutil
 
@@ -48,7 +47,7 @@ class Test_Predict():
                 pass
 
         cls.models_path = Path(__file__).parents[1] / 'models/saved'
-        dashm_testing_folders = glob(str(cls.models_path / '*dashm-testing'))
+        dashm_testing_folders = cls.models_path.glob('*dashm-testing')
         for dashm_testing_folder in dashm_testing_folders:
             shutil.rmtree(dashm_testing_folder)
 
@@ -57,7 +56,7 @@ class Test_Predict():
     def test_predict(self):
         get_data.clone('https://github.com/kbrose/dashm-testing.git')
         process_data.process('dashm-testing')
-        train.train('dashm-testing', steps_per_epoch=3, epochs=1)
+        train.train('dashm-testing', 0.5, steps_per_epoch=3, epochs=1)
 
         predictor_inferred = predict.Predictor()
 

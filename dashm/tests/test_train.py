@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import os
-from glob import glob
 from pathlib import Path
 import shutil
 
@@ -28,7 +27,7 @@ class Test_Train():
                 pass
 
         cls.models_path = Path(__file__).parents[1] / 'models/saved'
-        dashm_testing_folders = glob(str(cls.models_path / '*dashm-testing'))
+        dashm_testing_folders = cls.models_path.glob('*dashm-testing')
         for dashm_testing_folder in dashm_testing_folders:
             shutil.rmtree(dashm_testing_folder)
 
@@ -38,14 +37,14 @@ class Test_Train():
         get_data.clone('https://github.com/kbrose/dashm-testing.git')
         process_data.process('dashm-testing')
 
-        train.train('dashm-testing', steps_per_epoch=3, epochs=1)
+        train.train('dashm-testing', 0.5, steps_per_epoch=3, epochs=1)
 
-        saved_folders = glob(str(self.models_path / '*dashm-testing'))
+        saved_folders = list(self.models_path.glob('*dashm-testing'))
         assert len(saved_folders)
 
         for folder in saved_folders:
             all_filenames = [os.path.split(f)[-1]
-                             for f in glob(str(Path(folder) / '*'))]
+                             for f in Path(folder).glob('*')]
             assert 'trainer.h5' in all_filenames
             assert 'encoder.h5' in all_filenames
             assert 'decoder.h5' in all_filenames

@@ -14,7 +14,7 @@ data/processed-repos/$(human_repo_name).dashm:
 	python -m dashm.data.process_data $(human_repo_name)
 
 model: data/processed-repos/$(human_repo_name).dashm
-	python -m dashm.models.train $(human_repo_name)
+	python -m dashm.models.train $(human_repo_name) 0.9
 
 test: clean-code
 	python -m pytest --cov-report term-missing --cov=dashm
