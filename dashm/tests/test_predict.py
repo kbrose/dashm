@@ -3,6 +3,9 @@
 import os
 from pathlib import Path
 import shutil
+import sys
+import io
+from contextlib import redirect_stdout
 
 import pytest
 
@@ -33,7 +36,7 @@ index 9917f99..8a30d76 100644
 
 class Test_Predict():
     @classmethod
-    def setup_method(cls):
+    def _clean(cls):
         data_path = Path(__file__).parents[2] / 'data/'
         for interim in ['raw-repos', 'processed-repos']:
             dst = data_path / interim / 'dashm-testing'
@@ -51,13 +54,22 @@ class Test_Predict():
         for dashm_testing_folder in dashm_testing_folders:
             shutil.rmtree(dashm_testing_folder)
 
-    teardown_method = setup_method
-
-    def test_predict(self):
+    @classmethod
+    def setup_method(cls):
+        cls.__old_sys_argv = sys.argv
+        cls.__old_sys_stdin = sys.stdin
+        cls._clean()
         get_data.clone('https://github.com/kbrose/dashm-testing.git')
         process_data.process('dashm-testing')
         train.train('dashm-testing', 0.5, steps_per_epoch=3, epochs=1)
 
+    @classmethod
+    def teardown_method(cls):
+        sys.argv = cls.__old_sys_argv
+        sys.stdin = cls.__old_sys_stdin
+        cls._clean()
+
+    def test_predict(self):
         predictor_inferred = predict.Predictor()
 
         probs = predictor_inferred.predict_proba(TEST_STRING, 400)
@@ -75,6 +87,13 @@ class Test_Predict():
         assert len(preds) <= 200
 
         predictor_explicit.predict(TEST_STRING.decode('utf-8'), 200)
+
+    def test_predict_cli(self):
+        sys.stdin.read = lambda: TEST_STRING
+
+        f = io.StringIO()
+        with redirect_stdout(f):
+            predict.cli()
 
     def test_predict_raises_when_not_found(self):
         with pytest.raises(RuntimeError):

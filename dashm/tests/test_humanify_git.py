@@ -16,7 +16,6 @@ class Test_Humanify():
     def teardown_method(cls):
         sys.argv = cls.__old_sys_argv
 
-
     def test_humanify_ssh(self):
         url = 'git@github.com:kbrose/dashm-testing.git'
         assert humanify_git.humanify(url) == 'dashm-testing'

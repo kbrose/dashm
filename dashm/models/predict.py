@@ -24,6 +24,7 @@ class Predictor():
     """
     Make predictions using a model saved to disk.
     """
+
     def __init__(self, model_dir=None):
         """
         Inputs
@@ -136,4 +137,4 @@ def cli():
 
 
 if __name__ == '__main__':
-    cli()
+    cli() # pragma: no cover
