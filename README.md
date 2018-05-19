@@ -7,15 +7,24 @@ Full disclosure nothing is finished yet. This is an aspirational repo.
 
 # Downloading and prepping data
 
-Usage:
+## Usage
 
 ```
 make raw repo=<repo name>
 make process repo=<repo name/short name>
 ```
 
-Example:
+### Examples:
+
+Clone and process a repo:
 
 ```
 make process repo=git@github.com:kbrose/dashm-testing.git
+```
+
+Clone a repo and process it, referring to its short name:
+
+```
+make raw repo=git@github.com:kbrose/dashm-testing.git
+make process repo=dashm-testing
 ```
