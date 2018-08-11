@@ -6,7 +6,8 @@ import contextlib
 
 f = io.StringIO()
 with contextlib.redirect_stderr(f):
-    import keras
+    from keras.layers import GRU, Input, Dense
+    from keras.models import Model
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
@@ -27,41 +28,69 @@ def make_models(summary=True):
 
     Returns
     -------
-    trainer_model : keras.models.Model
+    trainer_model : Model
         A model that can be compiled and fit to train the weights.
-    encoder_model : keras.models.Model
+    encoder_model : Model
         Model used to create an encoding during inference.
-    decoder_model : keras.models.Model
+    decoder_model : Model
         Model repeatedly called to create the output during inference.
     """
-    latent_dim = 32
+
+    hidden_params = {
+        'return_sequences': True, 'return_state': False, 'activation': 'relu'
+    }
+    final_params = {
+        'return_sequences': False, 'return_state': True, 'activation': 'tanh'
+    }
+    latent = 32
 
     # Create the model that will train the weights
-    encoder_inp = keras.layers.Input(shape=(None, 128), name='encoder_input')
-    encoder = keras.layers.GRU(latent_dim, return_state=True, name='encoder')
-    _, encoder_state = encoder(encoder_inp)
+    encoder_inp = Input(shape=(None, 128), name='encoder_input')
 
-    decoder_inp = keras.layers.Input(shape=(None, 128), name='decoder_input')
-    decoder = keras.layers.GRU(latent_dim, return_sequences=True,
-                               return_state=True, name='decoder')
-    decoder_outputs, _ = decoder(decoder_inp, initial_state=encoder_state)
+    def encoder(x):
+        x = GRU(8, name='encoder_1', **hidden_params)(x)
+        x = GRU(16, name='encoder_2', **hidden_params)(x)
+        _, encoder_state = GRU(latent, name='encoded', **final_params)(x)
+        return encoder_state
 
-    predictor = keras.layers.Dense(128, activation='softmax', name='probs')
+    encoder_state = encoder(encoder_inp)
+
+    decoder_inp = Input(shape=(None, 128), name='decoder_input')
+
+    def decoder(x, init_state):
+        x = GRU(latent, name='decoder_1', **hidden_params)(
+            x, initial_state=init_state
+        )
+        x = GRU(16, name='decoder_2', **hidden_params)(x)
+        outputs, states = GRU(latent, name='decoded', **final_params)(x)
+        return outputs, states
+
+    decoder_outputs, _ = decoder(decoder_inp, encoder_state)
+
+    hidden_layers = [
+        Dense(32, activation='relu', name='hidden_1'),
+        Dense(64, activation='relu', name='hidden_2'),
+        Dense(128, activation='softmax', name='probs')
+    ]
+
+    def predictor(x):
+        for hl in hidden_layers:
+            x = hl(x)
+        return x
+
     preds = predictor(decoder_outputs)
 
-    training_model = keras.models.Model([encoder_inp, decoder_inp], preds)
+    training_model = Model([encoder_inp, decoder_inp], preds)
 
     # Create the model used to get encoding vector from input
-    encoder_model = keras.models.Model(encoder_inp, encoder_state)
+    encoder_model = Model(encoder_inp, encoder_state)
 
     # Create the model called repeatedly to build up the output stream
-    decoder_state_inp = keras.layers.Input(shape=(latent_dim,),
-                                           name='decoder_state_input')
-    decoder_outputs, decoder_state = decoder(decoder_inp,
-                                             initial_state=decoder_state_inp)
+    decoder_state_inp = Input(shape=(latent,), name='decoder_state_input')
+    decoder_outputs, decoder_state = decoder(decoder_inp, decoder_state_inp)
     decoder_preds = predictor(decoder_outputs)
-    decoder_model = keras.models.Model([decoder_inp, decoder_state_inp],
-                                       [decoder_preds, decoder_state])
+    decoder_model = Model([decoder_inp, decoder_state_inp],
+                          [decoder_preds, decoder_state])
 
     if summary:
         line_length = 80 if summary is True else summary
