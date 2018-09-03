@@ -10,7 +10,7 @@ data/raw-repos/$(human_repo_name).dashm:
 
 process: raw data/processed-repos/$(human_repo_name).dashm
 
-data/processed-repos/$(human_repo_name).dashm:
+data/processed-repos/$(human_repo_name).dashm: raw
 	python -m dashm.data.process_data $(human_repo_name)
 
 model: data/processed-repos/$(human_repo_name).dashm
