@@ -39,9 +39,6 @@ def make_models(summary=True):
     hidden_params = {
         'return_sequences': True, 'return_state': False, 'activation': 'relu'
     }
-    final_params = {
-        'return_sequences': False, 'return_state': True, 'activation': 'tanh'
-    }
     latent = 32
 
     # Create the model that will train the weights
@@ -50,7 +47,10 @@ def make_models(summary=True):
     def encoder(x):
         x = GRU(8, name='encoder_1', **hidden_params)(x)
         x = GRU(16, name='encoder_2', **hidden_params)(x)
-        _, encoder_state = GRU(latent, name='encoded', **final_params)(x)
+        _, encoder_state = GRU(
+            latent, name='encoded', return_sequences=False,
+            return_state=True, activation='tanh'
+        )(x)
         return encoder_state
 
     encoder_state = encoder(encoder_inp)
@@ -62,7 +62,9 @@ def make_models(summary=True):
             x, initial_state=init_state
         )
         x = GRU(16, name='decoder_2', **hidden_params)(x)
-        outputs, states = GRU(latent, name='decoded', **final_params)(x)
+        outputs, states = GRU(
+            latent, name='decoded', return_sequences=True, return_state=True
+        )(x)
         return outputs, states
 
     decoder_outputs, _ = decoder(decoder_inp, encoder_state)
