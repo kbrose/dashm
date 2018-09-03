@@ -48,7 +48,7 @@ class Test_Train():
         sys.argv = cls.__old_sys_argv
 
     def test_train(self):
-        train.train('dashm-testing', 0.5, steps_per_epoch=3, epochs=1)
+        train.train('dashm-testing', 0.5, steps_per_epoch=3, epochs=2)
 
         saved_folders = list(self.models_path.glob('*dashm-testing'))
         assert len(saved_folders)
