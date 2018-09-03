@@ -67,7 +67,12 @@ def train(repo_path, cv_train_split, summary=False, **kwargs):
         for model, name in pairs:
             destination = save_path / (name + '-{}.h5').format(epoch_str)
             model.save_weights(destination)
-            (save_path / (name + '.h5')).symlink_to(destination)
+            symlink_source = (save_path / (name + '.h5'))
+            try:
+                symlink_source.unlink()
+            except FileNotFoundError:
+                pass
+            symlink_source.symlink_to(destination)
 
     # Fit the model
     defaults = {'steps_per_epoch': 1000,
@@ -97,7 +102,7 @@ def cli():
     p.add_argument('--summary', type=int, default=0,
                    help=('Width in characters of model summary. Use 0 for'
                          ' no summary.'))
-    p.add_argument('--steps_per_epoch', type=int, default=1000,
+    p.add_argument('--steps_per_epoch', type=int, default=50,
                    help=('Number of training steps per epoch.'))
     p.add_argument('--epochs', type=int, default=100,
                    help=('Number of training steps per epoch.'))
