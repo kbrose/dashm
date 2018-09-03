@@ -5,7 +5,7 @@ from pathlib import Path
 from datetime import datetime
 import argparse
 
-from keras.callbacks import TensorBoard
+from keras.callbacks import TensorBoard, LambdaCallback
 
 from ..data.load import load_train_generator, load, format_batch
 from .make_models import make_models
@@ -57,19 +57,27 @@ def train(repo_path, cv_train_split, summary=False, **kwargs):
     save_path = Path(__file__).parent / 'saved' / now
     os.makedirs(save_path, exist_ok=False)
 
+    def save_weights(epoch, _):
+        try:
+            epoch_str = '{:0>3d}'.format(epoch)
+        except ValueError:
+            epoch_str = epoch
+        trainer.save_weights(save_path / 'trainer-{}.h5'.format(epoch_str))
+        encoder.save_weights(save_path / 'encoder-{}.h5'.format(epoch_str))
+        decoder.save_weights(save_path / 'decoder-{}.h5'.format(epoch_str))
+
     # Fit the model
     defaults = {'steps_per_epoch': 1000,
                 'epochs': 100,
                 'max_queue_size': 50,
                 'workers': 1,
-                'callbacks': [TensorBoard(log_dir=str(save_path / 'logs'))]}
+                'callbacks': [TensorBoard(log_dir=str(save_path / 'logs')),
+                              LambdaCallback(on_epoch_end=save_weights)]}
     defaults.update(kwargs)
-    trainer.fit_generator(datagen(64), validation_data=val, **defaults)
-
-    # Save the models
-    trainer.save_weights(save_path / 'trainer.h5')
-    encoder.save_weights(save_path / 'encoder.h5')
-    decoder.save_weights(save_path / 'decoder.h5')
+    try:
+        trainer.fit_generator(datagen(64), validation_data=val, **defaults)
+    except KeyboardInterrupt:
+        save_weights('interrupted', '__unused__')
 
 
 def cli():
