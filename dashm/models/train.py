@@ -62,9 +62,12 @@ def train(repo_path, cv_train_split, summary=False, **kwargs):
             epoch_str = '{:0>3d}'.format(epoch)
         except ValueError:
             epoch_str = epoch
-        trainer.save_weights(save_path / 'trainer-{}.h5'.format(epoch_str))
-        encoder.save_weights(save_path / 'encoder-{}.h5'.format(epoch_str))
-        decoder.save_weights(save_path / 'decoder-{}.h5'.format(epoch_str))
+        pairs = [(trainer, 'trainer'), (encoder, 'encoder'),
+                 (decoder, 'decoder')]
+        for model, name in pairs:
+            destination = save_path / (name + '-{}.h5').format(epoch_str)
+            model.save_weights(destination)
+            (save_path / (name + '.h5')).symlink_to(destination)
 
     # Fit the model
     defaults = {'steps_per_epoch': 1000,
