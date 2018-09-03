@@ -3,6 +3,7 @@
 from pathlib import Path
 import sys
 import unicodedata
+from typing import Union, Generator
 
 import numpy as np
 
@@ -53,7 +54,7 @@ class Predictor():
 
         self._init_probs = np.expand_dims(one_hot_encode_msg(b'')[0:1], 0)
 
-    def state_from_diff(self, diff):
+    def state_from_diff(self, diff: Union[str, bytes]) -> np.ndarray:
         """
         Get the state encoded from the given diff.
 
@@ -62,17 +63,17 @@ class Predictor():
         diff : str or bytes-like
             The git-diff to encode into a state passed to the decoder.
         """
-        try:
+        if isinstance(diff, str):
             diff = unicodedata.normalize('NFKD', diff)
             diff = diff.encode('ascii', 'ignore')
-        except TypeError:
+        else:
             # diff already given in bytes
             pass
 
         x = np.expand_dims(one_hot_encode_diff(diff), 0)
         return self.encoder.predict(x)
 
-    def _proba_generator(self, state):
+    def _proba_generator(self, state) -> Generator[np.ndarray, None, None]:
         """
         Generator to output probabilities.
         """
@@ -81,7 +82,7 @@ class Predictor():
             probs, state = self.decoder.predict([probs, state])
             yield probs
 
-    def predict_proba(self, diff, n=300):
+    def predict_proba(self, diff: Union[str, bytes], n: int=300) -> np.ndarray:
         """
         Predicts a sequence of `n` of the commit message for a given
         diff. Outputs a probability distribution over the possible
@@ -101,11 +102,12 @@ class Predictor():
         """
         state = self.state_from_diff(diff)
         gen = self._proba_generator(state)
+        self._proba_generator(self.state_from_diff(diff))
         out_probs = np.array([next(gen) for i in range(n)])
 
         return out_probs
 
-    def predict(self, diff, max_len=300):
+    def predict(self, diff: Union[str, bytes], max_len: int=300) -> bytes:
         """
         Predict the commit message for the given diff. Cut the
         message off if it grows too long.
@@ -117,6 +119,11 @@ class Predictor():
         max_len : int
             Cut the message off if we get this many characters
             without seeing the `dashm.data.load.MSG_END` character.
+        
+        Returns
+        -------
+        msg : bytes
+            The estimated commit message.
         """
         state = self.state_from_diff(diff)
         gen = self._proba_generator(state)
