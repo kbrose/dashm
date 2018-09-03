@@ -102,7 +102,7 @@ def cli():
     p.add_argument('--summary', type=int, default=0,
                    help=('Width in characters of model summary. Use 0 for'
                          ' no summary.'))
-    p.add_argument('--steps_per_epoch', type=int, default=50,
+    p.add_argument('--steps_per_epoch', type=int, default=1000,
                    help=('Number of training steps per epoch.'))
     p.add_argument('--epochs', type=int, default=100,
                    help=('Number of training steps per epoch.'))
