@@ -8,18 +8,18 @@ raw: data/raw-repos/$(human_repo_name).dashm
 data/raw-repos/$(human_repo_name).dashm:
 	python -m dashm.data.get_data $(repo)
 
-process: raw data/processed-repos/$(human_repo_name).dashm
+process: data/raw-repos/$(human_repo_name).dashm data/processed-repos/$(human_repo_name).dashm
 
-data/processed-repos/$(human_repo_name).dashm: raw
+data/processed-repos/$(human_repo_name).dashm:
 	python -m dashm.data.process_data $(human_repo_name)
 
-model: data/processed-repos/$(human_repo_name).dashm
+model: process
 	python -m dashm.models.train $(human_repo_name) 0.9
 
 test: clean-code
 	python -m pytest --cov-report term-missing --cov=dashm
 
-clean-all: clean-code clean-data
+clean-all: clean-code clean-data clean-models
 
 clean-data: clean-raw clean-processed
 
@@ -33,3 +33,6 @@ clean-code:
 	rm -rf *.pyc
 	rm -rf .pytest_cache
 	rm -rf dashm/.pytest_cache
+
+clean-models:
+	rm -rf dashm/models/saved/*
