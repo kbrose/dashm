@@ -35,8 +35,8 @@ class Test_Clone():
 
     def assert_cloned_correctly(self):
         dst = Path(__file__).parents[2] / 'data/raw-repos/dashm-testing'
-        assert os.path.exists(dst)
-        assert os.path.exists(str(dst) + '.dashm')
+        assert dst.exists()
+        assert dst.with_suffix('.dashm').exists()
 
     def test_clone(self):
         get_data.clone('https://github.com/kbrose/dashm-testing.git')
