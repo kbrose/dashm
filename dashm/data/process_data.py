@@ -8,11 +8,12 @@ the result back to disk.
 import subprocess as sp
 from pathlib import Path
 import argparse
+from typing import Union
 
 from .humanify_git import humanify
 
 
-def process(repo_path):
+def process(repo_path : Union[str, Path]) -> None:
     """
     Processes the commits in the git repo found at `repo_path`.
     If `repo_path` is not absolute, then it is assumed to be
