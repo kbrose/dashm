@@ -7,11 +7,13 @@ Utils to download data from external sources.
 import subprocess as sp
 from pathlib import Path
 import argparse
+from typing import Union
+
 from .humanify_git import humanify
 
 
 # TODO: add capabilities to checkout specific branches
-def clone(repo, dst=None):
+def clone(repo : str, dst: Union[str, Path, None]=None):
     """
     Clones the git repo at the given destination to
     `<this project>/<dst>/<repo name>`. The destination defaults
@@ -22,7 +24,7 @@ def clone(repo, dst=None):
 
     Inputs
     ------
-    repo : str or Path-like
+    repo : str
         The path to the git repo, i.e. 'git@github.com:kbrose/dash-m.git'
     dst : str or Path-like
         The destination path relative to the top level of this project.
