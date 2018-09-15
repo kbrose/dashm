@@ -4,8 +4,10 @@ import os
 from pathlib import Path
 from datetime import datetime
 import argparse
+from typing import Union, Tuple
 
 from keras.callbacks import TensorBoard, LambdaCallback
+from keras.models import Model
 
 from ..data.load import load_train_generator, load, format_batch
 from .make_models import make_models
@@ -13,7 +15,8 @@ from .make_models import make_models
 SAVE_TIME_STRING = '%Y-%m-%d_%H-%M-%S'
 
 
-def train(repo_path, cv_train_split, summary=False, **kwargs):
+def train(repo_path : Union[str, Path], cv_train_split : float,
+          summary : bool=False, **kwargs) -> Tuple[Model, Model, Model]:
     """
     Trains the models against the diff/message data in
     `<project path>/data/processed-repos/<repo_path>`.
@@ -29,6 +32,10 @@ def train(repo_path, cv_train_split, summary=False, **kwargs):
         Print model summary? passed to make_models()
     **kwargs
         Passed through to model.fit_generator()
+
+    Returns
+    -------
+    trainer, encoder, decoder : same as make_models()
     """
     # Get the model architectures
     trainer, encoder, decoder = make_models(summary=summary)
@@ -86,6 +93,8 @@ def train(repo_path, cv_train_split, summary=False, **kwargs):
         trainer.fit_generator(datagen(64), validation_data=val, **defaults)
     except KeyboardInterrupt:
         save_weights('interrupted', '__unused__')
+
+    return trainer, encoder, decoder
 
 
 def cli():
