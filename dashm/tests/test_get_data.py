@@ -33,7 +33,8 @@ class Test_Clone():
         cls._clean()
         sys.argv = cls.__old_sys_argv
 
-    def assert_cloned_correctly(self):
+    @staticmethod
+    def assert_cloned_correctly():
         dst = Path(__file__).parents[2] / 'data/raw-repos/dashm-testing'
         assert dst.exists()
         assert dst.with_suffix('.dashm').exists()
