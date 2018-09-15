@@ -3,6 +3,7 @@
 import os
 import io
 import contextlib
+from typing import Union, Tuple
 
 f = io.StringIO()
 with contextlib.redirect_stderr(f):
@@ -12,7 +13,7 @@ with contextlib.redirect_stderr(f):
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 
-def make_models(summary=True):
+def make_models(summary : Union[bool, int]=True) -> Tuple[Model, Model, Model]:
     """
     Create the three models necessary for a seq2seq translation
     model, namely a model that can train the weights, a model
