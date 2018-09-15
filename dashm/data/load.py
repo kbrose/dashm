@@ -2,6 +2,7 @@
 
 from pathlib import Path
 import random
+from typing import Tuple, Union, Iterable, List
 
 import numpy as np
 from keras.preprocessing.sequence import pad_sequences
@@ -19,7 +20,7 @@ __msg_begin = np.fromstring(MSG_BEGIN, np.uint8)[0]
 __msg_end = np.fromstring(MSG_END, np.uint8)[0]
 
 
-def one_hot_encode_diff(bytes_to_encode):
+def one_hot_encode_diff(bytes_to_encode : bytes) -> np.ndarray:
     """
     One-hot encode the given bytes into 2D float32 numpy array.
 
@@ -47,7 +48,7 @@ def one_hot_encode_diff(bytes_to_encode):
     return y
 
 
-def one_hot_encode_msg(bytes_to_encode):
+def one_hot_encode_msg(bytes_to_encode : bytes) -> np.ndarray:
     """
     One-hot encode the given bytes into 2D float32 numpy array.
 
@@ -77,12 +78,14 @@ def one_hot_encode_msg(bytes_to_encode):
     return y
 
 
-def _read(filename, maxlen=-1):
+def _read(filename : Union[str, Path], maxlen : int=-1):
     with open(filename, 'rb') as fp:
         return fp.read(maxlen)
 
 
-def load(repo_path, cv_train_split, which, max_diff_len=-1, max_msg_len=-1):
+def load(repo_path : Union[str, Path], cv_train_split : float, which : str,
+         max_diff_len : int=-1, max_msg_len : int=-1
+        ) -> Tuple[np.ndarray, np.ndarray]:
     """
     Loads the processed data from
     `<project path>/data/processed-repos/<repo name>` into
@@ -158,8 +161,9 @@ def load(repo_path, cv_train_split, which, max_diff_len=-1, max_msg_len=-1):
         raise ValueError('`which` must be one of ["train", "val"]')
 
 
-def load_train_generator(repo_path, cv_train_split,
-                         max_diff_len=-1, max_msg_len=-1):
+def load_train_generator(repo_path : Union[str, Path], cv_train_split : float,
+                         max_diff_len : int=-1, max_msg_len : int=-1
+                        ) -> Iterable[Tuple[np.ndarray, np.ndarray]]:
     """
     A generator giving access to the data located in
     `<project path>/data/processed-repos/<repo name>`.
@@ -216,7 +220,10 @@ def load_train_generator(repo_path, cv_train_split,
         yield x, y
 
 
-def format_batch(batch, max_diff_len, max_msg_len):
+def format_batch(batch : List[Tuple[np.ndarray, np.ndarray]],
+                 max_diff_len : int,
+                 max_msg_len : int
+                ) -> Tuple[List[np.ndarray], np.ndarray]:
     """
     Format a batch by padding sequences with 0s up to the maximum lengths
     given. Also slices the message `y` into `y0` and `y1` similarly to
@@ -269,4 +276,4 @@ def format_batch(batch, max_diff_len, max_msg_len):
                        truncating='post',
                        value=0.0)
 
-    return [xs, ys[:, :-1, :]], ys[:, 1:, :]
+    return [xs, ys[:, :-1, :]], ys[:, 1:, :] # type: ignore # mypy hates slice
