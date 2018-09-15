@@ -119,7 +119,7 @@ class Predictor():
         max_len : int
             Cut the message off if we get this many characters
             without seeing the `dashm.data.load.MSG_END` character.
-        
+
         Returns
         -------
         msg : bytes
