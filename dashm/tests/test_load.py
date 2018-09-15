@@ -30,7 +30,8 @@ class Test_Load():
             except FileNotFoundError:
                 pass
 
-    def test_load(self):
+    @staticmethod
+    def test_load():
         x_train, y_train = load.load('dashm-testing', 0.5, 'train')
         assert len(x_train) == len(y_train)
         for x, y in zip(x_train, y_train):
@@ -46,11 +47,13 @@ class Test_Load():
         assert abs(len(x_val) - len(x_train)) <= 1
         assert abs(len(y_val) - len(y_train)) <= 1
 
-    def test_load_bad_which(self):
+    @staticmethod
+    def test_load_bad_which():
         with pytest.raises(ValueError):
-            x_train, y_train = load.load('dashm-testing', 0.5, 'non-existent')
+            load.load('dashm-testing', 0.5, 'non-existent')
 
-    def test_load_max_diff_len(self):
+    @staticmethod
+    def test_load_max_diff_len():
         x_train, y_train = load.load('dashm-testing', 1.0, 'train')
         # if some len isn't > 1 originally then this doesn't test anything.
         assert any(len(x) > 2 for x in x_train)
@@ -66,7 +69,8 @@ class Test_Load():
             assert y.shape == y2.shape
             assert (y.flatten() == y2.flatten()).all()
 
-    def test_load_max_msg_len(self):
+    @staticmethod
+    def test_load_max_msg_len():
         x_train, y_train = load.load('dashm-testing', 1.0, 'train')
         # if some len isn't > 1 originally then this doesn't test anything.
         assert any(len(y) > 3 for y in y_train)
@@ -82,13 +86,15 @@ class Test_Load():
             assert x.shape == x2.shape
             assert (x.flatten() == x2.flatten()).all()
 
-    def test_load_generator(self):
+    @staticmethod
+    def test_load_generator():
         g = load.load_train_generator('dashm-testing', 0.5)
         x, y = next(g)
         assert (x.sum(axis=1) == 1).all()
         assert (y.sum(axis=1) == 1).all()
 
-    def test_format_batch(self):
+    @staticmethod
+    def test_format_batch():
         g = load.load_train_generator('dashm-testing', 0.5)
         batch_len = 10
         batch = [next(g) for _ in range(batch_len)]

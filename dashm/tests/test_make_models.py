@@ -7,11 +7,14 @@ from dashm.models.make_models import make_models
 
 
 class Test_MakeModels():
-    def test_makes_models_without_errors(self):
-        trainer, encoder, decoder = make_models(summary=False)
+    @staticmethod
+    def test_makes_models_without_errors():
+        make_models(summary=False)
 
-    def test_summary(self):
+    @staticmethod
+    def test_summary():
         f = io.StringIO()
+
         with redirect_stdout(f):
             make_models(summary=40)
         s = f.getvalue()
@@ -20,7 +23,7 @@ class Test_MakeModels():
 
         f = io.StringIO()
         with redirect_stdout(f):
-            make_models(summary=True)
+            make_models(summary=True) # 80 is current keras default
         s = f.getvalue()
         for line in s.split('\n'):
             assert len(line) < 81 # one char lee-way for windows

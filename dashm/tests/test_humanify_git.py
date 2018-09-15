@@ -16,19 +16,23 @@ class Test_Humanify():
     def teardown_method(cls):
         sys.argv = cls.__old_sys_argv
 
-    def test_humanify_ssh(self):
+    @staticmethod
+    def test_humanify_ssh():
         url = 'git@github.com:kbrose/dashm-testing.git'
         assert humanify_git.humanify(url) == 'dashm-testing'
 
-    def test_humanify_https(self):
+    @staticmethod
+    def test_humanify_https():
         url = 'https://github.com/kbrose/dashm-testing.git'
         assert humanify_git.humanify(url) == 'dashm-testing'
 
-    def test_humanify_no_slashes(self):
+    @staticmethod
+    def test_humanify_no_slashes():
         url = 'git@something-else.org:no-path.git'
         assert humanify_git.humanify(url) == 'no-path'
 
-    def test_cli_https(self):
+    @staticmethod
+    def test_cli_https():
         sys.argv = ['python', 'https://github.com/kbrose/dashm-testing.git']
         f = io.StringIO()
         with redirect_stdout(f):
@@ -36,7 +40,8 @@ class Test_Humanify():
         s = f.getvalue()
         assert s == 'dashm-testing'
 
-    def test_cli_ssh(self):
+    @staticmethod
+    def test_cli_ssh():
         sys.argv = ['python', 'git@github.com:kbrose/dashm-testing.git']
         f = io.StringIO()
         with redirect_stdout(f):

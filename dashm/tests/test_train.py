@@ -51,7 +51,7 @@ class Test_Train():
         train.train('dashm-testing', 0.5, steps_per_epoch=3, epochs=2)
 
         saved_folders = list(self.models_path.glob('*dashm-testing'))
-        assert len(saved_folders)
+        assert saved_folders
 
         for folder in saved_folders:
             all_filenames = [os.path.split(f)[-1]
@@ -66,7 +66,7 @@ class Test_Train():
         train.cli()
 
         saved_folders = list(self.models_path.glob('*dashm-testing'))
-        assert len(saved_folders)
+        assert saved_folders
 
         for folder in saved_folders:
             all_filenames = [os.path.split(f)[-1]
