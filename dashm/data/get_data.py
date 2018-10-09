@@ -13,7 +13,7 @@ from .humanify_git import humanify
 
 
 # TODO: add capabilities to checkout specific branches
-def clone(repo : str, dst: Union[str, Path, None]=None):
+def clone(repo: str, dst: Union[str, Path, None]=None):
     """
     Clones the git repo at the given destination to
     `<this project>/<dst>/<repo name>`. The destination defaults

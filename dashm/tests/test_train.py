@@ -60,9 +60,37 @@ class Test_Train():
             assert 'encoder.h5' in all_filenames
             assert 'decoder.h5' in all_filenames
 
+    def test_train_in_memory(self):
+        train.train('dashm-testing', 0.5, in_memory=True, epochs=2)
+
+        saved_folders = list(self.models_path.glob('*dashm-testing'))
+        assert saved_folders
+
+        for folder in saved_folders:
+            all_filenames = [os.path.split(f)[-1]
+                             for f in Path(folder).glob('*')]
+            assert 'trainer.h5' in all_filenames
+            assert 'encoder.h5' in all_filenames
+            assert 'decoder.h5' in all_filenames
+
     def test_cli(self):
         sys.argv = ['train.py', 'dashm-testing', '0.5', '--steps_per_epoch',
                     '3', '--epochs', '1']
+        train.cli()
+
+        saved_folders = list(self.models_path.glob('*dashm-testing'))
+        assert saved_folders
+
+        for folder in saved_folders:
+            all_filenames = [os.path.split(f)[-1]
+                             for f in Path(folder).glob('*')]
+            assert 'trainer.h5' in all_filenames
+            assert 'encoder.h5' in all_filenames
+            assert 'decoder.h5' in all_filenames
+
+    def test_cli_in_memory(self):
+        sys.argv = ['train.py', 'dashm-testing', '0.5', '--steps_per_epoch',
+                    '3', '--epochs', '1', '--in-memory']
         train.cli()
 
         saved_folders = list(self.models_path.glob('*dashm-testing'))

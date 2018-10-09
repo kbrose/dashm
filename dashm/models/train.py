@@ -15,8 +15,9 @@ from .make_models import make_models
 SAVE_TIME_STRING = '%Y-%m-%d_%H-%M-%S'
 
 
-def train(repo_path : Union[str, Path], cv_train_split : float,
-          summary : bool=False, **kwargs) -> Tuple[Model, Model, Model]:
+def train(repo_path: Union[str, Path], cv_train_split: float,
+          summary: bool=False, in_memory: bool=False, **kwargs
+          ) -> Tuple[Model, Model, Model]:
     """
     Trains the models against the diff/message data in
     `<project path>/data/processed-repos/<repo_path>`.
@@ -82,15 +83,30 @@ def train(repo_path : Union[str, Path], cv_train_split : float,
             symlink_source.symlink_to(destination)
 
     # Fit the model
-    defaults = {'steps_per_epoch': 1000,
+
+    try:
+        if in_memory:
+            defaults = {
+                'batch_size': 64,
+                'epochs': 100,
+                'callbacks': [TensorBoard(log_dir=str(save_path / 'logs')),
+                              LambdaCallback(on_epoch_end=save_weights)]
+            }
+            defaults.update(kwargs)
+            train_data = load(repo_path, cv_train_split, 'train', 200, 200)
+            x, y = format_batch(list(zip(*train_data)), 200, 200)
+            trainer.fit(x, y, validation_data=val, **defaults)
+        else:
+            defaults = {
+                'steps_per_epoch': 1000,
                 'epochs': 100,
                 'max_queue_size': 50,
                 'workers': 1,
                 'callbacks': [TensorBoard(log_dir=str(save_path / 'logs')),
-                              LambdaCallback(on_epoch_end=save_weights)]}
-    defaults.update(kwargs)
-    try:
-        trainer.fit_generator(datagen(64), validation_data=val, **defaults)
+                              LambdaCallback(on_epoch_end=save_weights)]
+            }
+            defaults.update(kwargs)
+            trainer.fit_generator(datagen(64), validation_data=val, **defaults)
     except KeyboardInterrupt:
         save_weights('interrupted', '__unused__')
 
@@ -112,17 +128,23 @@ def cli():
                    help=('Width in characters of model summary. Use 0 for'
                          ' no summary.'))
     p.add_argument('--steps_per_epoch', type=int, default=1000,
-                   help=('Number of training steps per epoch.'))
+                   help=('Number of training steps per epoch. Only used if'
+                         ' --in-memory is not specified.'))
     p.add_argument('--epochs', type=int, default=100,
-                   help=('Number of training steps per epoch.'))
+                   help=('Number of epochs to train for.'))
+    p.add_argument('--in-memory', dest='in_memory', action='store_true',
+                   help=('Load all data in memory during training.'))
 
     args = p.parse_args()
 
-    train(args.repo,
-          args.cross_validation_split,
-          summary=args.summary,
-          steps_per_epoch=args.steps_per_epoch,
-          epochs=args.epochs)
+    kwargs = {
+        'summary': args.summary,
+        'epochs': args.epochs,
+        'in_memory': args.in_memory
+    }
+    if not args.in_memory:
+        kwargs['steps_per_epoch'] = args.steps_per_epoch
+    train(args.repo, args.cross_validation_split, **kwargs)
 
 
 if __name__ == '__main__':
